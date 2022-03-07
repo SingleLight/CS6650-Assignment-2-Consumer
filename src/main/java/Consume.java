@@ -34,11 +34,11 @@ public class Consume implements Runnable{
 
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
           String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
-          System.out.println(" [x] Received '" + message + "'");
+          //System.out.println(" [x] Received '" + message + "'");
           try {
             doWork(message);
           } finally {
-            System.out.println(" [x] Done");
+            //System.out.println(" [x] Done");
             channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
           }
         };
