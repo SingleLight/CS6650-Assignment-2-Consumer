@@ -1,20 +1,20 @@
 import com.google.gson.Gson;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import redis.clients.jedis.JedisPool;
 
-public class Worker {
+public class WorkerSki {
 
-  private static final Map<Integer, Integer> liftIDtoTime = new ConcurrentHashMap<>();
   private static final Gson gson = new Gson();
-  private static final String TASK_QUEUE_NAME = "task_queue";
 
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
     factory.setHost("localhost");
+    factory.setUsername("user");
+    factory.setPassword("user");
     final Connection connection = factory.newConnection();
     int num = 1;
     if (argv != null && argv.length != 0) {
@@ -24,9 +24,12 @@ public class Worker {
         e.printStackTrace();
       }
     }
-    ExecutorService threadPool = Executors.newFixedThreadPool(128);
+    final Channel channel = connection.createChannel();
+    String queueName = channel.queueDeclare().getQueue();
+    JedisPool pool = new JedisPool("localhost", 6379);
+    ExecutorService threadPool = Executors.newFixedThreadPool(64);
     for (int i = 0; i < num; i++) {
-      Thread thread = new Thread(new Consume(connection, TASK_QUEUE_NAME, gson, liftIDtoTime));
+      Thread thread = new Thread(new ConsumeSki(connection, gson, pool, queueName));
       threadPool.execute(thread);
     }
   }
